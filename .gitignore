@@ -1,0 +1,36 @@
+*.class
+wechiver-tmp-*
+./wechiver-tmp-*.*
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.DS_Store
+*.code-workspace
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+target
+webchiver-mirror-database.db
+webchiversqlite.db
+
+*~
+.#*
+*#
+
+*.idea*
+*.iml
+.idea
+
+site-pro-spec.txt
+nohup
+stallion.local.toml
+.stallion-scripts
+app-data
+bin
+bin/webchiver
+build.py
+
