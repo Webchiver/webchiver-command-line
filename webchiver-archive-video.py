@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Copyright Stallion Software LLC, all rights reserved.
+#
+# Those with a Webchiver.com account or who have purchased a Webchiver self-hosted license may use and modify this program. You cannot distribute this program to other people or entities without permission.
+
 import argparse
 from datetime import datetime
 from hashlib import md5
