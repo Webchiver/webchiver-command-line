@@ -36,8 +36,13 @@ def main():
     parser.add_argument("url", help="The URL to archive")
     parser.add_argument("--server-url", help="The URL of the webchiver server", required=False)
     parser.add_argument("--api-key", help="The URL of the webchiver server", required=False)
+    parser.add_argument("--tags", help="Tags for the video, separate tags with commas", required=False)
+    parser.add_argument('--set-as-default', action='store_true')
     args = parser.parse_args()
 
+    tags = None
+    if args.tags:
+        tags = args.tags.split(',')
     
     settings = load_settings(args)
     
@@ -80,7 +85,8 @@ def main():
         binaryFile=False,
         description=description,
         isPlainTextFile=False,
-        skipTagChanges=True
+        skipTagChanges=True,
+        tags=tags
     )
 
    
@@ -135,6 +141,8 @@ def main():
         print(response)
         print(response.content)
         raise Exception("Error saving metadata")
+    info = response.json()
+    storage_remaining_bytes = info.get('accountStorageRemainingBytes', 1000000000000000)
     if screenshot_data_url:
         response = requests.post(
             server_url + '/api/articles/save-screenshot',
@@ -157,7 +165,10 @@ def main():
             canonicalUrl=url + '#' + path,
             videoExtension=ext
         )
-        
+        file_size = os.path.getsize(path)
+        storage_remaining_bytes = storage_remaining_bytes - file_size
+        if storage_remaining_bytes < 0:
+            raise Exception("Not enough space in account to save this video. Upgrade your account to more storage space.")
         with open(path, 'rb') as f:
             upload_url = server_url + '/api/articles/video-stream-upload'
             print('Upload video ' + path + ' Upload URL ' + upload_url)
@@ -192,22 +203,29 @@ def load_settings(args):
         print(settings)
         for server in settings.get('servers', []):
             if not server_url:
-                server_conf = server
-                break
+                if not server_conf or server.get('is_default'):
+                    server_conf = server
             elif server_url == server['url']:
                 server_conf = server
+                break
         if server_conf:
-            print('CONF ', server_conf)
             api_key = server_conf.get('api_key')
             server_url = server_conf.get('url')
-
+    if api_key and args.set_as_default:
+        for server in settings.get('servers', []):
+            if server['url'] == server_url:
+                server['is_default'] = True
+            else:
+                server['is_default'] = False
+        with open(conf_file_path, 'w') as f:
+                print('Save settings ', settings)
+                toml.dump(settings, f)
     if not server_url:
         api_key = None
         server_url = input("What server do you want to connect to (Default https://app.webchiver.com)? ")
         if not server_url:
             server_url = "https://app.webchiver.com"
     url = server_url + '/api/account/command-line-ask-for-key'
-    print("URL ", url)
     if not api_key:
         r = requests.post(
             url,
@@ -216,7 +234,6 @@ def load_settings(args):
             }
         )
         text = r.text
-        print(r)
         d = json.loads(text)
         connection_secret = d['connectionSecret']
         input('Go to the following URL to approve the request, then return here and type enter: \n\n\t' + server_url + "/app/approve-connection?returnToKey=console&connectionSecret=" + connection_secret + "\n\n")
@@ -242,8 +259,14 @@ def load_settings(args):
         found = False
         for server in settings['servers']:
             if server_conf['url'] == server['url']:
+                if args.set_as_default:
+                    print('SET AS DEFAUlT')
+                    server_conf['set_as_default'] = True
                 server.update(server_conf)
                 found = True
+            else:
+                if args.set_as_default:
+                    server_conf['set_as_default'] = False
         if not found:
             settings['servers'].append(server_conf)
         api_key = server_conf['api_key']
@@ -251,6 +274,7 @@ def load_settings(args):
         yn = input('Connection succeeded. Save api key to local file ' + str(conf_file_path) + '? Y/n')
         if yn == 'Y':
             with open(conf_file_path, 'w') as f:
+                print(settings)
                 toml.dump(settings, f)
     return Settings(server_url, api_key)
     

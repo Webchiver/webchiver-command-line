@@ -12,7 +12,7 @@ This program allows you to archive videos to your Webchiver ([webchiver.com](htt
 ```
 pipenv run python3 webchiver-archive-video.py <url-of-video>
 # Eg.
-pipenv run python3 webchiver-archive-video.py  https://www.youtube.com/watch?v=dQw4w9WgXcQ
+pipenv run python3 webchiver-archive-video.py  "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 7. Optional: Add a command alias for your script
 ```
