@@ -170,7 +170,7 @@ def main():
         if storage_remaining_bytes < 0:
             raise Exception("Not enough space in account to save this video. Upgrade your account to more storage space.")
         with open(path, 'rb') as f:
-            upload_url = server_url + '/api/articles/video-stream-upload'
+            upload_url = server_url + '/api/video-attachments/video-upload-as-single-entity'
             print('Upload video ' + path + ' Upload URL ' + upload_url)
             response = requests.post(
                 upload_url,
